@@ -1,4 +1,4 @@
-FROM busybox as base
+FROM busybox:glibc as base
 
 # -- download
 FROM curlimages/curl as download
