@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+if [[ -z "${1}" ]]; then
+  echo "Usage: bin/push path/to/Dockerfile"
+  exit 1
+fi
+
+dockerfile="${1}"
+build_args_file="$(dirname "${dockerfile}")/build-args"
+docker_image="$(basename "$(dirname "${dockerfile}")")"
+
+if [[ ! -f "${dockerfile}" ]]; then
+  echo "Submitted Dockerfile does not exists: ${dockerfile}"
+  exit 2
+fi
+
+if [[ ! -f "${build_args_file}" ]]; then
+  echo "Build args file not found! Expected: ${build_args_file}"
+  exit 3
+fi
+
+declare -a tag
+tag=($(cat "${build_args_file}" | sed "s/^.*\=\(.*\)/\\1/g"))
+
+IFS='-'
+docker push "fundocker/${docker_image}:${tag[*]}"
+docker push "fundocker/${docker_image}:latest"
+
+echo "Publications successfull"

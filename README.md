@@ -3,6 +3,20 @@
 In this repository, you will find sources of Docker images we often use at
 @openfun and for which no official or satisfying image is distributed.
 
+## Usage
+
+To build all images use the dedicated make target:
+
+```bash
+$ make build
+```
+
+And to publish build images to Dockerhub:
+
+```bash
+$ make push
+```
+
 ## Tools
 
 ### `jq`
