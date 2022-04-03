@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+if [[ -z "${1}" ]]; then
+  echo "Usage: bin/build path/to/Dockerfile"
+  exit 1
+fi
+
+dockerfile="${1}"
+context="$(dirname "${dockerfile}")"
+build_args_file="$(dirname "${dockerfile}")/build-args"
+docker_image="$(basename "$(dirname "${dockerfile}")")"
+
+if [[ ! -f "${dockerfile}" ]]; then
+  echo "Submitted Dockerfile does not exists: ${dockerfile}"
+  exit 2
+fi
+
+if [[ ! -f "${build_args_file}" ]]; then
+  echo "Build args file not found! Expected: ${build_args_file}"
+  exit 3
+fi
+
+build_args="$(sed "s/^/--build-arg /g" "${build_args_file}" | tr "\n" " ")"
+
+echo "Building ${docker_image}:latest image with ${build_args} ..."
+
+# shellcheck disable=SC2086
+docker build \
+  -t "fundocker/${docker_image}:latest" \
+  ${build_args} \
+  "${context}"
+
+declare -a tag
+tag=($(cat "${build_args_file}" | sed "s/^.*\=\(.*\)/\\1/g"))
+
+IFS='-'
+echo "Tagging image ${docker_image} with ${tag[*]} ..."
+docker tag "fundocker/${docker_image}:latest" "fundocker/${docker_image}:${tag[*]}"
+
+echo "Build successfull"
